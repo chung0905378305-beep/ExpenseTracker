@@ -1,4 +1,5 @@
 import Foundation
+import BackgroundTasks
 
 /// 行情服务 — 多源行情拉取
 @MainActor
