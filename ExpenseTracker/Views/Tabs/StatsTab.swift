@@ -147,8 +147,8 @@ struct MonthlySummaryCard: View {
     @EnvironmentObject var appState: AppState
 
     var body: some View {
-        let income = transactions.filter { $0.kind == .income }.reduce(0.0, +)
-        let expense = transactions.filter { $0.kind == .expense }.reduce(0.0, +)
+        let income = transactions.filter { $0.kind == .income }.reduce(0.0) { $0 + $1.amount }
+        let expense = transactions.filter { $0.kind == .expense }.reduce(0.0) { $0 + $1.amount }
         let balance = income - expense
         let savingRate = income > 0 ? (balance / income * 100) : 0
 
@@ -257,8 +257,8 @@ struct TrendCard: View {
         let months = last6Months()
         let data = months.map { month in
             let txns = transactions.filter { $0.monthKey == month }
-            let income = txns.filter { $0.kind == .income }.reduce(0.0, +)
-            let expense = txns.filter { $0.kind == .expense }.reduce(0.0, +)
+            let income = txns.filter { $0.kind == .income }.reduce(0.0) { $0 + $1.amount }
+            let expense = txns.filter { $0.kind == .expense }.reduce(0.0) { $0 + $1.amount }
             return (month, income, expense)
         }
 
@@ -349,8 +349,8 @@ struct YearlyComparisonCard: View {
 
             ForEach(months, id: \.self) { month in
                 let txns = transactions.filter { $0.monthKey == month }
-                let expense = txns.filter { $0.kind == .expense }.reduce(0.0, +)
-                let income = txns.filter { $0.kind == .income }.reduce(0.0, +)
+                let expense = txns.filter { $0.kind == .expense }.reduce(0.0) { $0 + $1.amount }
+                let income = txns.filter { $0.kind == .income }.reduce(0.0) { $0 + $1.amount }
                 let maxVal = transactions.reduce(0.0) { max($0, $1.amount) }
 
                 VStack(alignment: .leading, spacing: 4) {

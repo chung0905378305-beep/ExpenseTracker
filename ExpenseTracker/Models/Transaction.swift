@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-enum TransactionKind: Int, Codable {
+enum TransactionKind: Int, Codable, CaseIterable {
     case expense = 0
     case income = 1
     case transfer = 2
