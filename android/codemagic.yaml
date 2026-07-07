@@ -1,0 +1,22 @@
+workflows:
+  android-workflow:
+    name: Android Build
+    max_build_duration: 30
+    environment:
+      java: 17
+      groups:
+        - android_credentials
+    scripts:
+      - name: Grant execute permission
+        script: chmod +x gradlew
+      - name: Build debug APK
+        script: ./gradlew assembleDebug
+    artifacts:
+      - app/build/outputs/apk/**/*.apk
+    publishing:
+      email:
+        recipients:
+          - chung0905378305@gmail.com
+        notify:
+          success: false
+          failure: true

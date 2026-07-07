@@ -28,3 +28,14 @@ Pods/
 # Misc
 *.swp
 *.bak
+
+# Android
+android/.gradle/
+android/local.properties
+android/.idea/
+android/app/build/
+android/build/
+android/captures/
+android/.externalNativeBuild/
+android/.cxx/
+*.iml
