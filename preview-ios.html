@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>记账本 · iOS 设计优化预览 v5.1</title>
+<style>
+  /* ============ Design Tokens ============ */
+  :root{
+    --r-sm:10px; --r-md:14px; --r-lg:16px; --r-xl:20px;
+    --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px;
+    --sh-1: 0 1px 2px rgba(0,0,0,.05);
+    --sh-2: 0 6px 18px rgba(0,0,0,.06);
+    --sh-3: 0 10px 28px rgba(0,0,0,.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background: #eceef1; color: #1c1c1e; padding: 30px 30px 50px; }
+  h1 { font-size: 22px; font-weight: 700; letter-spacing:-.3px; }
+  .sub { color: #6b7280; font-size: 13px; margin: 6px 0 4px; line-height:1.6; }
+  .legend { display:flex; gap:14px; flex-wrap:wrap; margin: 10px 0 22px; font-size:11px; color:#8a8f98; }
+  .legend b { color:#4b5563; }
+  .ctrl { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 6px; padding: 14px 18px; background: #fff; border-radius: var(--r-lg); box-shadow: var(--sh-1); }
+  .ctrl .grp { display: flex; gap: 6px; align-items: center; }
+  .ctrl .lbl { font-size: 12px; color: #6b7280; }
+  .ctrl button { font-size: 13px; padding: 7px 15px; border-radius: var(--r-sm); border: 1px solid #d8dbe0; background: #fff; cursor: pointer; color:#1c1c1e; transition: all .15s ease; }
+  .ctrl button:hover { border-color:#b9bdc4; }
+  .ctrl button.act { background: #1c1c1e; color: #fff; border-color: #1c1c1e; }
+  .grid { display: flex; flex-wrap: wrap; gap: 26px; margin-top:18px; }
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .pname { font-size: 13px; font-weight: 600; color:#374151; }
+
+  /* ============ Phone frame ============ */
+  .phone { width: 300px; height: 640px; border-radius: 46px; padding: 11px; border: 11px solid #161618; box-shadow: 0 20px 46px rgba(0,0,0,.24); background:#161618; }
+  .screen { width:100%; height:100%; border-radius: 34px; overflow: hidden; display:flex; flex-direction:column; position:relative; }
+  .statusbar { height: 34px; display:flex; align-items:center; justify-content:space-between; padding: 0 22px; font-size:12px; font-weight:600; }
+  .content { flex:1; overflow-y:auto; padding: 4px 16px 8px; }
+
+  .seg { display:flex; background: var(--soft); border-radius: var(--r-sm); margin: 8px 16px; padding: 3px; }
+  .seg div { flex:1; text-align:center; font-size:13px; padding: 7px 0; border-radius: 8px; color: var(--ts); font-weight:500; }
+  .seg div.on { background: var(--surface); color: var(--tp); font-weight: 600; box-shadow: var(--sh-1); }
+
+  /* ============ 记一笔 Pad ============ */
+  .typeSeg { display:flex; gap:6px; margin: 8px 0 14px; }
+  .typeSeg div { flex:1; text-align:center; font-size:13px; padding:9px 0; border-radius:var(--r-md); background: var(--surface); color: var(--ts); font-weight:600; box-shadow:var(--sh-1); transition: all .15s ease; }
+  .typeSeg div.on { background: var(--accent); color:#fff; box-shadow: 0 4px 12px rgba(0,0,0,.14); }
+  .amount { display:flex; align-items:baseline; justify-content:center; gap:2px; padding: 10px 6px 18px; letter-spacing:-.5px; }
+  .amount .sign { font-size:24px; font-weight:600; }
+  .amount .cur { font-size:21px; font-weight:600; opacity:.5; }
+  .amount .num { font-size:48px; font-weight:700; line-height:1; font-variant-numeric: tabular-nums; }
+  .catGrid { display:grid; grid-template-columns: repeat(5,1fr); gap: 14px 4px; margin-bottom: 14px; }
+  .cat { display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; }
+  .cat .ci { width: 46px; height: 46px; border-radius: 14px; display:flex; align-items:center; justify-content:center; font-size: 20px; box-shadow: 0 2px 7px rgba(0,0,0,.07); transition: all .15s ease; }
+  .cat .ct { font-size: 10.5px; color: var(--ts); }
+  .cat.on .ci { outline: 2.5px solid var(--accent); outline-offset: 2px; transform: translateY(-1px); }
+  .cat.on .ct { color: var(--accent); font-weight: 700; }
+  .field { display:flex; justify-content:space-between; align-items:center; padding: 14px 4px; border-bottom: 1px solid var(--sep); font-size:14px; }
+  .field .k { color: var(--tp); font-weight:500; }
+  .field .v { color: var(--ts); font-size:13px; }
+  .keypad { display:grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--sep); border-radius: var(--r-md); overflow:hidden; margin-top: 12px; }
+  .key { background: var(--surface); text-align:center; padding: 15px 0; font-size: 20px; font-weight:600; color: var(--tp); min-height:48px; display:flex; align-items:center; justify-content:center; }
+  .key.save { background: linear-gradient(180deg, var(--inc), color-mix(in srgb, var(--inc) 88%, #000)); color:#fff; font-weight:700; font-size:15px; grid-column:span 3; letter-spacing:2px; }
+
+  /* ============ 明细 ============ */
+  .search { height:40px; border-radius:var(--r-md); background: var(--surface); display:flex; align-items:center; padding:0 14px; font-size:13px; color: var(--ts); margin: 6px 0 12px; box-shadow:var(--sh-1); }
+  .sum { background: var(--surface); border-radius: var(--r-lg); padding: 16px; box-shadow: var(--sh-1), var(--sh-2); margin-bottom: 12px; }
+  .sum-top { display:flex; align-items:baseline; justify-content:space-between; }
+  .sum-top .lab { font-size:12px; color:var(--ts); }
+  .sum-top .bal { font-size:28px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .sum-mini { display:flex; gap:8px; margin-top:12px; }
+  .sum-mini .mini { flex:1; border-radius:12px; padding:8px 10px; }
+  .sum-mini .mini.up { background: color-mix(in srgb, var(--inc) 12%, transparent); }
+  .sum-mini .mini.down { background: color-mix(in srgb, var(--exp) 12%, transparent); }
+  .sum-mini .mini span { font-size:11px; color:var(--ts); display:block; }
+  .sum-mini .mini b { font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .sum-mini .mini.up b { color:var(--inc); }
+  .sum-mini .mini.down b { color:var(--exp); }
+  .grp-t { font-size:13px; font-weight:600; padding: 10px 2px 6px; display:flex; justify-content:space-between; color: var(--tp); }
+  .row { display:flex; align-items:center; padding: 11px 2px; gap:11px; border-bottom:1px solid var(--sep); }
+  .ri { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:19px; background: var(--soft); flex-shrink:0; }
+  .rm { flex:1; min-width:0; }
+  .rm .t { font-size:15px; font-weight:500; color: var(--tp); }
+  .rm .s { font-size:12px; color: var(--ts); margin-top:1px; }
+  .ra { font-size:16px; font-weight:600; font-variant-numeric: tabular-nums; }
+
+  /* ============ 统计仪表盘 ============ */
+  .card { background: var(--surface); border-radius: var(--r-lg); padding: 14px 15px; box-shadow: var(--sh-1), var(--sh-2); margin-bottom: 11px; position:relative; }
+  .card .ch { display:flex; justify-content:space-between; align-items:center; margin-bottom:9px; }
+  .card .ctitle { font-size:14px; font-weight:600; color: var(--tp); display:flex; align-items:center; gap:6px; }
+  .card .ctitle .ico { width:22px; height:22px; border-radius:7px; background:var(--soft); display:flex; align-items:center; justify-content:center; font-size:12px; }
+  .card .handle { color: var(--ts); font-size:13px; letter-spacing:1px; opacity:.7; }
+  .card .sub2 { font-size:12px; color: var(--ts); }
+  .card .sub2 b { font-weight:700; }
+  .bar { margin: 6px 0; }
+  .bar .lab { display:flex; justify-content:space-between; font-size:11px; color: var(--tp); margin-bottom:5px; }
+  .bar .track { height:9px; border-radius:5px; background: var(--soft); overflow:hidden; }
+  .bar .fill { height:100%; border-radius:5px; }
+
+  /* ============ 资产 ============ */
+  .netw { background: linear-gradient(135deg, var(--soft), var(--surface)); border-radius:var(--r-lg); padding:16px; box-shadow:var(--sh-1), var(--sh-2); margin-bottom:10px; border:1px solid var(--sep); }
+  .netw .lab { font-size:12px; color:var(--ts); }
+  .netw .big { font-size:32px; font-weight:700; font-variant-numeric:tabular-nums; margin-top:4px; color: var(--tp); }
+  .netw .delta { font-size:12px; margin-top:4px; font-weight:600; }
+  .sec-t { font-size:12px; font-weight:600; color:var(--ts); padding:10px 2px 5px; display:flex; justify-content:space-between; align-items:center; }
+  .sec-t .more { font-size:11px; font-weight:400; color:var(--accent); }
+  .pl-pill { display:inline-block; font-size:11px; font-weight:700; padding:1px 7px; border-radius:8px; margin-top:3px; }
+  .pl-pill.up { background: color-mix(in srgb, var(--inc) 15%, transparent); color:var(--inc); }
+  .pl-pill.down { background: color-mix(in srgb, var(--exp) 15%, transparent); color:var(--exp); }
+
+  /* ============ 设置 / 我的 ============ */
+  .acc { display:flex; align-items:center; gap:14px; background: linear-gradient(135deg, var(--soft), var(--surface)); border:1px solid var(--sep); border-radius:var(--r-lg); padding:16px; margin: 4px 0 14px; box-shadow:var(--sh-1); }
+  .acc .ava { width:48px; height:48px; border-radius:50%; background:var(--surface); border:2px solid var(--accent); display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+  .acc .ainfo { flex:1; }
+  .acc .ainfo .an { font-size:16px; font-weight:700; color:var(--tp); }
+  .acc .ainfo .as { font-size:12px; color:var(--ts); margin-top:2px; }
+  .acc .badge-vip { font-size:10px; font-weight:700; color:#fff; background:linear-gradient(135deg,var(--accent), color-mix(in srgb,var(--accent) 70%, #ff8a5b)); padding:2px 8px; border-radius:8px; }
+  .setgrp { background: var(--surface); border-radius: var(--r-md); padding: 4px 14px; margin-bottom: 12px; box-shadow:var(--sh-1); }
+  .setrow { display:flex; justify-content:space-between; align-items:center; padding: 14px 2px; border-bottom:1px solid var(--sep); font-size:14px; color:var(--tp); }
+  .setrow:last-child { border-bottom:none; }
+  .setrow .r { color: var(--ts); font-size:13px; display:flex; align-items:center; gap:6px; }
+  .cta { display:block; text-align:center; background: var(--accent); color:#fff; border-radius:12px; padding:13px; font-weight:700; font-size:14px; margin-top:4px; letter-spacing:1px; box-shadow:0 6px 16px rgba(0,0,0,.16); }
+  .toggle { width:42px; height:25px; border-radius:13px; background: var(--accent); position:relative; flex-shrink:0; }
+  .toggle i { position:absolute; right:2px; top:2px; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+
+  /* ============ Tab / FAB ============ */
+  .tabbar { height: 62px; display:flex; align-items:center; border-top:1px solid var(--sep); }
+  .tabbar .tab { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; }
+  .tabbar .tab .ti { font-size:20px; }
+  .tabbar .tab.on .ti, .tabbar .tab.on span { font-weight:700; }
+  .tabpos { position:relative; }
+  .badge { position:absolute; top:-4px; right:-6px; background:#ff3b30; color:#fff; font-size:9px; font-weight:700; border-radius:9px; padding:0 4px; height:14px; line-height:14px; }
+  .fab { position:absolute; right:18px; bottom:76px; width:52px; height:52px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:26px; box-shadow:0 8px 20px rgba(0,0,0,.24); }
+  .invcard { background: var(--surface); border-radius: var(--r-lg); padding: 12px 14px; box-shadow: var(--sh-1); margin-bottom:11px; }
+  .inv-t { display:flex; justify-content:space-between; align-items:center; }
+  .inv-t .nm { font-size:15px; font-weight:700; color:var(--tp); }
+  .inv-t .iv { font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--tp); }
+  .inv-sub { font-size:12px; color:var(--ts); margin:2px 0 8px; }
+  .inv-sub .pl-pill { margin-left:6px; }
+  .hrow { display:flex; align-items:center; gap:11px; padding:10px 2px; border-top:1px solid var(--sep); cursor:pointer; }
+  .hrow:first-of-type { border-top:none; }
+  .hd-name { font-size:20px; font-weight:700; color:var(--tp); }
+  .hd-code { font-size:12px; color:var(--ts); margin-top:1px; }
+  .hd-grid { display:flex; gap:8px; margin:12px 0; }
+  .hd-cell { flex:1; background: var(--surface); border-radius:12px; padding:10px; box-shadow:var(--sh-1); }
+  .hd-cell span { font-size:11px; color:var(--ts); display:block; }
+  .hd-cell b { font-size:16px; font-weight:700; font-variant-numeric:tabular-nums; display:block; margin-top:3px; }
+  .realized { font-size:12px; color:var(--ts); margin: 0 0 10px; }
+  .realized b { color:var(--inc); }
+  .ptable { background: var(--surface); border-radius:12px; padding:6px 12px; box-shadow:var(--sh-1); margin-bottom:11px; }
+  .pt-row { display:flex; justify-content:space-between; font-size:12px; padding:8px 0; border-bottom:1px solid var(--sep); color:var(--tp); }
+  .pt-row:last-child { border-bottom:none; }
+  .pt-row span:first-child { color:var(--ts); }
+  .flow { display:flex; align-items:center; gap:10px; padding:9px 2px; border-bottom:1px solid var(--sep); font-size:13px; }
+  .flow:last-child { border-bottom:none; }
+  .flow .tag { font-size:10px; font-weight:700; padding:1px 6px; border-radius:6px; }
+  .flow .tag.buy { background: color-mix(in srgb, var(--exp) 14%, transparent); color:var(--exp); }
+  .flow .tag.sell { background: color-mix(in srgb, var(--inc) 14%, transparent); color:var(--inc); }
+  .flow .tag.div { background: color-mix(in srgb, var(--accent) 14%, transparent); color:var(--accent); }
+  .flow .fm { flex:1; }
+  .flow .fm .t { color:var(--tp); font-weight:500; }
+  .flow .fm .s { font-size:11px; color:var(--ts); }
+  .flow .fa { font-variant-numeric:tabular-nums; font-weight:600; }
+  .mini-top { display:flex; justify-content:space-between; align-items:center; padding: 4px 4px 4px; }
+  .mini-top .lk { font-size:13px; color:var(--accent); font-weight:600; cursor:pointer; }
+</style>
+</head>
+<body>
+<h1>记账本 · iOS 设计优化预览 v5.1</h1>
+<div class="sub">v5.1 资产模块层级化重构（第一性原理）：以「账户」为脊柱，持仓嵌套于账户下，形成 账户→总计→单独 三级钻取；新增持仓详情页（周/月/季/年/总计 资金走向 + 期间汇总 + 交易流水 + 占比 + 已实现/未实现盈亏分离）。</div>
+<div class="legend"><span><b>优化点</b></span><span>① 金额 hero 排版</span><span>② 分类选中态 accent 描边</span><span>③ 结余大数字 + 收支 mini 块</span><span>④ 趋势渐变面积</span><span>⑤ 账户卡渐变+会员 CTA</span><span>⑥ 触控 ≥44pt / WCAG AA</span><span>⑦ 资产账户脊柱+持仓三级钻取</span></div>
+
+<div class="ctrl">
+  <div class="grp"><span class="lbl">主题</span>
+    <button class="tbtn act" onclick="setTheme('A')">原生简洁</button>
+    <button class="tbtn" onclick="setTheme('B')">温暖亲和</button>
+    <button class="tbtn" onclick="setTheme('C')">专业金融</button>
+    <button class="tbtn" onclick="setTheme('D')">极简黑白</button>
+  </div>
+  <div class="grp"><span class="lbl">明暗</span>
+    <button class="mbtn act" onclick="setMode('light')">浅色</button>
+    <button class="mbtn" onclick="setMode('dark')">暗色</button>
+  </div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const THEMES = {
+  A:{ name:"原生 iOS 简洁", light:{ bg:"#F2F2F7", surface:"#FFFFFF", tp:"#1C1C1E", ts:"#8E8E93", accent:"#0A84FF", soft:"#E8F1FF", exp:"#FF3B30", inc:"#34C759", sep:"#E5E5EA" }, dark:{ bg:"#000000", surface:"#1C1C1E", tp:"#FFFFFF", ts:"#98989F", accent:"#0A84FF", soft:"#0A2A4D", exp:"#FF453A", inc:"#30D158", sep:"#38383A" } },
+  B:{ name:"温暖亲和", light:{ bg:"#FFF8F2", surface:"#FFFFFF", tp:"#2B2118", ts:"#A08C7A", accent:"#FF8A5B", soft:"#FFEDE2", exp:"#FF6B6B", inc:"#2BB673", sep:"#F0DCCB" }, dark:{ bg:"#1A1410", surface:"#261E18", tp:"#FFF3EA", ts:"#B89B86", accent:"#FF9F43", soft:"#3A2A1C", exp:"#FF6B6B", inc:"#34D399", sep:"#3A2E22" } },
+  C:{ name:"专业金融", light:{ bg:"#F4F6F9", surface:"#FFFFFF", tp:"#0F1B2D", ts:"#64748B", accent:"#1D4ED8", soft:"#E6EDFE", exp:"#DC2626", inc:"#16A34A", sep:"#E6EBF1" }, dark:{ bg:"#0B1220", surface:"#131C2E", tp:"#E6EDF7", ts:"#8A9BB5", accent:"#3B82F6", soft:"#14233F", exp:"#F87171", inc:"#4ADE80", sep:"#223049" } },
+  D:{ name:"极简黑白", light:{ bg:"#FFFFFF", surface:"#FAFAFA", tp:"#000000", ts:"#6B6B6B", accent:"#111111", soft:"#F0F0F0", exp:"#8C2B2B", inc:"#2B6B3D", sep:"#E8E8E8" }, dark:{ bg:"#000000", surface:"#0A0A0A", tp:"#FFFFFF", ts:"#A0A0A0", accent:"#FFFFFF", soft:"#1A1A1A", exp:"#D98A8A", inc:"#8AD9A0", sep:"#2A2A2A" } },
+};
+let TH="A", MODE="light";
+const CATS = [ {ic:"🍜",n:"餐饮",c:"#FF9F43"},{ic:"🚕",n:"交通",c:"#3B82F6"},{ic:"🛒",n:"购物",c:"#EC4899"},{ic:"🎬",n:"娱乐",c:"#8B5CF6"},{ic:"🏠",n:"居住",c:"#10B981"},{ic:"💊",n:"医疗",c:"#EF4444"},{ic:"💰",n:"工资",c:"#22C55E"},{ic:"📱",n:"订阅",c:"#6366F1"},{ic:"☕",n:"咖啡",c:"#A16207"},{ic:"➕",n:"其他",c:"#94A3B8"} ];
+const ROWS = [ {ic:"🍜",cat:"餐饮",note:"美团外卖 · 今天",amt:-38.5,exp:1},{ic:"💰",cat:"工资",note:"月度工资 · 7-01",amt:12800,exp:0},{ic:"🛒",cat:"购物",note:"超市采购 · 7-05",amt:-156.8,exp:1},{ic:"📱",cat:"订阅",note:"Apple Music · 7-03",amt:-15.0,exp:1},{ic:"☕",cat:"咖啡",note:"瑞幸咖啡 · 7-06",amt:-19.9,exp:1} ];
+const STATPerc = [ {n:"餐饮",v:"32%",p:100,c:"#FF9F43"},{n:"购物",v:"24%",p:75,c:"#EC4899"},{n:"交通",v:"18%",p:56,c:"#3B82F6"},{n:"居住",v:"14%",p:44,c:"#10B981"} ];
+const ACCOUNTS = [
+  { type:"投资", name:"富途证券", total:98870, cost:92000,
+    holdings:[
+      {n:"苹果 AAPL", code:"AAPL", q:"100 股", price:"$178.2", mv:17820, cost:16500, pct:8.0, realized:1200},
+      {n:"特斯拉 TSLA", code:"TSLA", q:"30 股", price:"$245.1", mv:7353, cost:8100, pct:-9.2, realized:0},
+      {n:"贵州茅台", code:"600519.SH", q:"10 股", price:"¥1,685", mv:16850, cost:17200, pct:-2.0, realized:600},
+      {n:"英伟达 NVDA", code:"NVDA", q:"25 股", price:"$122.4", mv:3060, cost:2500, pct:22.4, realized:0},
+    ]},
+  { type:"投资", name:"华泰证券", total:42050, cost:40000,
+    holdings:[
+      {n:"宁德时代", code:"300750.SZ", q:"200 股", price:"¥210.2", mv:42040, cost:40000, pct:5.1, realized:300},
+    ]},
+  { type:"现金", name:"招商银行", val:52300, sub:"储蓄" },
+  { type:"现金", name:"支付宝", val:8640, sub:"余额" },
+  { type:"实物", name:"黄金", val:12000, sub:"实物" },
+  { type:"实物", name:"房产", val:1200000, sub:"估值" },
+  { type:"负债", name:"信用卡", val:-3200, sub:"待还 7/12" },
+  { type:"负债", name:"房贷", val:-800000, sub:"月供 7/20" },
+];
+const FLAT_HOLD = [];
+ACCOUNTS.forEach(a=>{ if(a.holdings) a.holdings.forEach(h=>{ FLAT_HOLD.push(Object.assign({acc:a.name, accTotal:a.total, gi:FLAT_HOLD.length}, h)); }); });
+const ASSET_VAL = ACCOUNTS.reduce((s,a)=> s + (a.type==="负债"?0:(a.total||a.val||0)), 0);
+const LIAB_VAL = ACCOUNTS.reduce((s,a)=> s + (a.type==="负债"?Math.abs(a.val):0), 0);
+const NET = ASSET_VAL - LIAB_VAL;
+let OPEN_HOLDING = -1;
+let HOLD_RANGE = "月";
+function openHolding(i){ OPEN_HOLDING=i; render(); }
+function closeHolding(){ OPEN_HOLDING=-1; render(); }
+function setHoldRange(r){ HOLD_RANGE=r; render(); }
+
+function assetList(){
+  const groups=[["投资账户",ACCOUNTS.filter(a=>a.type==="投资")],["现金账户",ACCOUNTS.filter(a=>a.type==="现金")],["实物资产",ACCOUNTS.filter(a=>a.type==="实物")],["负债",ACCOUNTS.filter(a=>a.type==="负债")]];
+  let html = `<div class="netw"><div class="lab">净资产（CNY）</div><div class="big">¥ ${NET.toLocaleString()}</div><div class="delta" style="color:var(--inc)">本月 +4.8% ↑</div></div>`;
+  groups.forEach(([title, list])=>{
+    if(!list.length) return;
+    html += `<div class="sec-t"><span>${title}</span><span class="more">管理 ›</span></div>`;
+    list.forEach(a=>{
+      if(a.type==="投资"){
+        const hrows = a.holdings.map(h=>{
+          const up = h.pct>=0;
+          return `<div class="hrow" onclick="openHolding(${h.gi})"><div class="ri">📈</div><div class="rm"><div class="t">${h.n}</div><div class="s">${h.code} · ${h.q}</div></div><div style="text-align:right"><div class="ra" style="color:var(--tp)">¥${h.mv.toLocaleString()}</div><span class="pl-pill ${up?'up':'down'}">${up?'+':''}${h.pct}%</span></div></div>`;
+        }).join("");
+        const aup = a.total>=a.cost;
+        html += `<div class="invcard"><div class="inv-t"><span class="nm">${a.name}</span><span class="iv">¥${a.total.toLocaleString()}</span></div><div class="inv-sub">成本 ¥${a.cost.toLocaleString()} · <span class="pl-pill ${aup?'up':'down'}">${aup?'+':''}${((a.total-a.cost)/a.cost*100).toFixed(1)}%</span></div>${hrows}</div>`;
+      } else {
+        const col = a.type==="负债" ? T().exp : T().tp;
+        const ic = a.type==="负债" ? (a.name==="信用卡"?"💳":"🏦") : (a.name==="黄金"?"🪙":"🏠");
+        html += `<div class="row"><div class="ri">${ic}</div><div class="rm"><div class="t">${a.name}</div><div class="s">${a.sub||""}</div></div><div class="ra" style="color:${col}">${a.val<0?"-":""}¥${Math.abs(a.val).toLocaleString()}</div></div>`;
+      }
+    });
+  });
+  return `<div class="content">${html}</div>`;
+}
+
+function trendPoints(range){
+  const cfg = {周:12, 月:12, 季:8, 年:5, 总计:24}[range] || 12;
+  let pts=[]; let base=28;
+  for(let i=0;i<cfg;i++){ base += Math.sin(i*1.1)*3 + (i%4-1.5)*2.2; pts.push(Math.max(8,base)); }
+  const max=Math.max(...pts), min=Math.min(...pts);
+  return pts.map((v,i)=>{ const x=10+i*(240/(cfg-1)); const y=58-((v-min)/((max-min)||1))*46; return [x,y]; });
+}
+function screenHolding(i){
+  const h = FLAT_HOLD[i];
+  const pts = trendPoints(HOLD_RANGE);
+  const poly = pts.map(p=>p.join(",")).join(" ");
+  const area = `10,64 ${poly} 250,64`;
+  const ranges=["周","月","季","年","总计"];
+  const rangeSeg = `<div class="seg">${ranges.map(r=>`<div class="${r===HOLD_RANGE?'on':''}" onclick="setHoldRange('${r}')">${r}</div>`).join("")}</div>`;
+  const accPct = (h.mv/h.accTotal*100).toFixed(1);
+  const totPct = (h.mv/ASSET_VAL*100).toFixed(2);
+  const flow = [
+    {tag:"buy", t:"买入", s:"2026-03-12 · 50 股", a:"-8,250"},
+    {tag:"buy", t:"买入", s:"2026-05-04 · 50 股", a:"-8,250"},
+    {tag:"div", t:"分红", s:"2026-06-01", a:"+1,200"},
+    {tag:"sell", t:"卖出", s:"2026-06-20 · 清仓", a:"+17,820"},
+  ];
+  const flowHtml = flow.map(f=>{ const c = f.tag==="buy"?T().exp:(f.tag==="sell"?T().inc:T().accent); const lbl = f.tag==="buy"?"买入":f.tag==="sell"?"卖出":"分红"; return `<div class="flow"><span class="tag ${f.tag}">${lbl}</span><div class="fm"><div class="t">${f.t}</div><div class="s">${f.s}</div></div><div class="fa" style="color:${c}">${f.a}</div></div>`; }).join("");
+  return `<div class="mini-top"><div class="lk" onclick="closeHolding()">‹ 持仓</div><div class="lk">卖出 ›</div></div>
+  <div class="content">
+    <div style="padding:2px 0 6px"><div class="hd-name">${h.n}</div><div class="hd-code">${h.code} · 现价 ${h.price}</div></div>
+    <div class="hd-grid">
+      <div class="hd-cell"><span>市值</span><b style="color:var(--tp)">¥${h.mv.toLocaleString()}</b></div>
+      <div class="hd-cell"><span>成本</span><b style="color:var(--tp)">¥${h.cost.toLocaleString()}</b></div>
+      <div class="hd-cell"><span>未实现盈亏</span><b style="color:${h.pct>=0?T().inc:T().exp}">${h.pct>=0?'+':''}${h.pct}%</b></div>
+    </div>
+    <div class="realized">已实现盈亏 <b>¥${h.realized.toLocaleString()}</b> · 数量 ${h.q}</div>
+    ${rangeSeg}
+    <div class="card"><div class="ch"><span class="ctitle"><span class="ico">📈</span>资金走向</span><span class="handle">${HOLD_RANGE}</span></div>
+      <svg viewBox="0 0 260 70" width="100%" height="78">
+        <defs><linearGradient id="ha${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${T().accent}" stop-opacity="0.22"/><stop offset="100%" stop-color="${T().accent}" stop-opacity="0"/></linearGradient></defs>
+        <polygon points="${area}" fill="url(#ha${i})"/>
+        <line x1="10" y1="50" x2="250" y2="50" stroke="${T().ts}" stroke-width="1.2" stroke-dasharray="4 4" opacity=".6"/>
+        <polyline points="${poly}" fill="none" stroke="${T().accent}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="sub2" style="font-size:11px"><span style="color:var(--accent)">■</span> 市值 &nbsp; <span style="color:var(--ts)">┄</span> 成本</div>
+    </div>
+    <div class="card"><div class="ch"><span class="ctitle"><span class="ico">🥧</span>占比</span></div>
+      <div class="sub2">占 <b>${h.acc}</b> <b>${accPct}%</b> · 占总资产 <b>${totPct}%</b></div></div>
+    <div class="ptable">
+      <div class="pt-row"><span>期初市值</span><span>¥${Math.round(h.mv*0.93).toLocaleString()}</span></div>
+      <div class="pt-row"><span>期末市值</span><span>¥${h.mv.toLocaleString()}</span></div>
+      <div class="pt-row"><span>期间变动</span><span style="color:var(--inc)">+¥${Math.round(h.mv*0.07).toLocaleString()}</span></div>
+      <div class="pt-row"><span>期间盈亏</span><span style="color:${h.pct>=0?T().inc:T().exp}">${h.pct>=0?'+':''}${h.pct}%</span></div>
+    </div>
+    <div class="card"><div class="ch"><span class="ctitle"><span class="ico">🧾</span>交易流水</span></div>${flowHtml}</div>
+  </div>`;
+}
+
+function T(){ return THEMES[TH][MODE]; }
+function tabbar(active){
+  const tabs=[["📋","明细"],["📊","统计"],["💼","资产"],["👤","我的"]];
+  return `<div class="tabbar" style="background:var(--surface)">${tabs.map((x,i)=>{const on=i===active?"on":"";const col=i===active?T().accent:T().ts;const badge=i===0?'<div class="badge">3</div>':"";return `<div class="tab ${on}" style="color:${col}"><div class="tabpos"><div class="ti">${x[0]}</div>${badge}</div><span>${x[1]}</span></div>`}).join("")}</div>`;
+}
+function colorMix(hex,a){ return `color-mix(in srgb, ${hex} ${a}, transparent)`; }
+
+function screenRecord(){
+  const cats = CATS.map((c,i)=>`<div class="cat ${i===0?'on':''}"><div class="ci" style="background:${c.c}1F">${c.ic}</div><div class="ct">${c.n}</div></div>`).join("");
+  return `<div class="mini-top"><div class="lk" style="color:var(--ts)">取消</div><div></div></div>
+  <div class="content">
+    <div class="typeSeg"><div class="on">支出</div><div>收入</div><div>转账</div></div>
+    <div class="amount" style="color:var(--exp)"><span class="sign">-</span><span class="cur">¥</span><span class="num">38.50</span></div>
+    <div class="catGrid">${cats}</div>
+    <div class="field"><span class="k">账户</span><span class="v">招商银行 ›</span></div>
+    <div class="field"><span class="k">日期</span><span class="v">今天 ›</span></div>
+    <div class="field" style="border-bottom:none"><span class="k">备注 / 标签</span><span class="v">添加 ›</span></div>
+    <div class="keypad">${["1","2","3","4","5","6","7","8","9",".","0","⌫"].map(k=>`<div class="key">${k}</div>`).join("")}<div class="key save">保 存</div></div>
+  </div>`;
+}
+function screenDetail(){
+  const rows = ROWS.map(r=>`<div class="row"><div class="ri">${r.ic}</div><div class="rm"><div class="t">${r.cat}</div><div class="s">${r.note}</div></div><div class="ra" style="color:${r.exp?T().exp:T().inc}">${r.exp?'-':'+'}${r.amt.toFixed(2)}</div></div>`).join("");
+  return `<div class="content">
+    <div class="search">🔍 搜索交易、商户…</div>
+    <div class="sum">
+      <div class="sum-top"><span class="lab">本月结余</span><span class="bal" style="color:var(--tp)">¥4,157.70</span></div>
+      <div class="sum-mini">
+        <div class="mini up"><span>收入</span><b>+12,800.00</b></div>
+        <div class="mini down"><span>支出</span><b>-8,642.30</b></div>
+      </div>
+    </div>
+    <div class="grp-t"><span>7月</span><span style="color:var(--ts);font-weight:400">支出 8,642 · 收入 12,800</span></div>
+    ${rows}
+  </div><div class="fab">+</div>`;
+}
+function screenStats(){
+  const bars = STATPerc.map(s=>`<div class="bar"><div class="lab"><span>${s.n}</span><span style="color:var(--ts)">${s.v}</span></div><div class="track"><div class="fill" style="width:${s.p}%;background:${s.c}"></div></div></div>`).join("");
+  const subCard = `<div class="card"><div class="ch"><span class="ctitle"><span class="ico">🔁</span>我的订阅</span><span class="handle">⠿</span></div>
+    <div class="sub2">最近续费 <b>7/15</b> · 共 <b>3</b> 笔 ›</div></div>`;
+  const sumCard = `<div class="card"><div class="ch"><span class="ctitle"><span class="ico">📊</span>本月汇总</span><span class="handle">⠿</span></div>
+    <div class="sub2" style="color:var(--inc)">收入 <b>+12,800</b></div><div class="sub2" style="color:var(--exp)">支出 <b>-8,642</b></div></div>`;
+  const catCard = `<div class="card"><div class="ch"><span class="ctitle"><span class="ico">🥧</span>分类占比</span><span class="handle">⠿</span></div>${bars}</div>`;
+  const trendCard = `<div class="card"><div class="ch"><span class="ctitle"><span class="ico">📈</span>近6月趋势</span><span class="handle">⠿</span></div>
+    <svg viewBox="0 0 260 70" width="100%" height="64">
+      <defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${T().accent}" stop-opacity="0.22"/>
+        <stop offset="100%" stop-color="${T().accent}" stop-opacity="0"/>
+      </linearGradient></defs>
+      <polygon points="10,50 60,40 110,46 160,28 210,20 250,12 250,64 10,64" fill="url(#area)"/>
+      <polyline points="10,50 60,40 110,46 160,28 210,20 250,12" fill="none" stroke="${T().accent}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <g fill="${T().accent}"><circle cx="10" cy="50" r="2.5"/><circle cx="60" cy="40" r="2.5"/><circle cx="110" cy="46" r="2.5"/><circle cx="160" cy="28" r="2.5"/><circle cx="210" cy="20" r="2.5"/><circle cx="250" cy="12" r="2.5"/></g>
+    </svg></div>`;
+  return `<div class="seg"><div class="on">周</div><div>本月</div><div>本年</div><div>自定义</div></div>
+  <div class="content">
+    ${subCard}${sumCard}${catCard}${trendCard}
+    <div class="sub2" style="text-align:center;color:var(--ts);font-size:11px;padding-top:2px">长按卡片可拖动排序 · 设置可隐藏</div>
+  </div>`;
+}
+function screenAsset(){
+  return OPEN_HOLDING>=0 ? screenHolding(OPEN_HOLDING) : assetList();
+}
+function screenMine(){
+  const acc = `<div class="acc"><div class="ava">👤</div><div class="ainfo"><div class="an">登录 / 注册</div><div class="as">登录后云端同步并解锁会员功能 ›</div></div></div>`;
+  const grp=(title,rows)=>`<div class="sec-t" style="padding-left:4px">${title}</div><div class="setgrp">${rows}</div>`;
+  const row=(k,v,withToggle)=>`<div class="setrow"><span>${k}</span><span class="r">${withToggle?'<span class="toggle"><i></i></span>':v+' ›'}</span></div>`;
+  return `<div class="content">
+    ${acc}
+    ${grp("会员订阅", row("会员状态","免费版")+row("管理订阅","")+row("恢复购买","")+`<div onclick="" style="padding:0 2px"><div class="cta">升级到会员版 · 解锁 AI / 多账户 / 多源行情</div></div>`)}
+    ${grp("外观", row("主题","原生简洁")+row("隐藏金额","",true))}
+    ${grp("账户与安全", row("App 锁","面容 ID",true)+row("基础币种","CNY"))}
+    ${grp("数据与同步", row("iCloud 同步","已开启",true)+row("备份与导入","")+row("订阅卡片","显示",true))}
+    ${grp("AI 与扩展", row("AI 接口","未设置")+row("邮箱记账","未绑定")+row("行情源","Yahoo"))}
+    ${grp("关于", row("隐私政策","")+row("版本","1.0.0"))}
+  </div>`;
+}
+
+function render(){
+  const t = T();
+  const root=document.documentElement;
+  ["bg","surface","tp","ts","accent","soft","exp","inc","sep"].forEach(k=>root.style.setProperty("--"+k,t[k]));
+  const css=`--bg:${t.bg};--surface:${t.surface};--tp:${t.tp};--ts:${t.ts};--accent:${t.accent};--soft:${t.soft};--exp:${t.exp};--inc:${t.inc};--sep:${t.sep}`;
+  const screens=[["明细（首屏 Tab）",screenDetail(),0],["记账（点 + 打开）",screenRecord(),0],["统计仪表盘",screenStats(),1],["资产",screenAsset(),2],["我的",screenMine(),3]];
+  document.getElementById("grid").innerHTML = screens.map(([n,h,act])=>`
+    <div class="phone-wrap"><div class="pname">${n}</div>
+    <div class="phone"><div class="screen" style="${css};background:var(--bg)">
+      <div class="statusbar" style="color:var(--tp)"><span>9:41</span><span>📶🔋</span></div>
+      ${h}${tabbar(act)}
+    </div></div></div>`).join("");
+}
+function setTheme(k){ TH=k; document.querySelectorAll(".tbtn").forEach(b=>b.classList.remove("act")); event.target.classList.add("act"); render(); }
+function setMode(m){ MODE=m; document.querySelectorAll(".mbtn").forEach(b=>b.classList.remove("act")); event.target.classList.add("act"); render(); }
+render();
+</script>
+</body>
+</html>

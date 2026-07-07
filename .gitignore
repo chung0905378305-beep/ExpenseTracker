@@ -1,0 +1,30 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+coverage/
+
+# Xcode
+*.xcuserdata
+*.xcworkspace/xcuserdata
+DerivedData/
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# XcodeGen generated project (Codemagic regenerates it)
+ExpenseTracker.xcodeproj/
+!ExpenseTracker.xcodeproj/xcshareddata/
+
+# CocoaPods (not used, but safe)
+Pods/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Misc
+*.swp
+*.bak

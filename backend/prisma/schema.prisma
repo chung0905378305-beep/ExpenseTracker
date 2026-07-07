@@ -1,0 +1,183 @@
+// 记账本 · 会员管理后台 — 数据模型
+// 技术栈：SQLite + Prisma（零依赖本地开发）
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String // bcrypt hash
+  name      String?
+  role      String   @default("admin") // admin | superadmin
+  active    Boolean  @default(true)
+  lastLogin DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditLogs        AuditLog[]
+  memberPermissions MemberPermission[]
+}
+
+model Member {
+  id           String   @id @default(cuid())
+  appUserId    String   @unique // 来自 iOS App 的用户标识（Apple User ID / 自生成）
+  email        String?  @unique
+  nickname     String?
+  platform     String   @default("iOS") // iOS | Android | Web
+  status       String   @default("active") // active | trialing | canceled | past_due
+  planId       String?
+  plan         Plan?    @relation(fields: [planId], references: [id])
+  joinedAt     DateTime @default(now())
+  expireAt     DateTime?
+  isTrial      Boolean  @default(false)
+  banned       Boolean  @default(false)
+  bannedReason String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  payments     Payment[]
+  subscription Subscription?
+  permissions  MemberPermission[]
+  tags         MemberTag[]
+
+  @@index([status])
+  @@index([planId])
+  @@index([banned])
+}
+
+model Plan {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Float // 基础币种价格（按 interval）
+  currency    String   @default("CNY")
+  interval    String   @default("month") // month | year
+  features    String   @default("[]") // JSON 字符串数组，如 '["权益A","权益B"]'
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members       Member[]
+  subscriptions Subscription[]
+  payments      Payment[]
+  activationCodes ActivationCode[]
+
+  @@index([isActive])
+}
+
+model Subscription {
+  id            String   @id @default(cuid())
+  memberId      String   @unique
+  member        Member?  @relation(fields: [memberId], references: [id])
+  planId        String
+  plan          Plan     @relation(fields: [planId], references: [id])
+  status        String   @default("active") // active | canceled | expired | paused | pending
+  startDate     DateTime @default(now())
+  endDate       DateTime? // 到期日，与 Member.expireAt 同步
+  autoRenew     Boolean  @default(true)
+  provider      String? // appstore | stripe | manual
+  providerSubId String? // 外部订阅 ID（如 Apple transactionId）
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+  @@index([planId])
+  @@index([endDate])
+}
+
+model Payment {
+  id           String   @id @default(cuid())
+  memberId     String
+  member       Member   @relation(fields: [memberId], references: [id])
+  planId       String?
+  plan         Plan?    @relation(fields: [planId], references: [id])
+  amount       Float
+  currency     String   @default("CNY")
+  status       String   @default("success") // success | failed | refunded | pending
+  provider     String? // appstore | stripe | manual
+  providerTxId String? // 外部交易 ID
+  paidAt       DateTime @default(now())
+  refundedAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([memberId])
+  @@index([status])
+  @@index([paidAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  adminId   String?
+  admin     Admin?   @relation(fields: [adminId], references: [id])
+  action    String
+  target    String? // 受影响实体 id
+  detail    String? // JSON 描述
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model MemberPermission {
+  id             String   @id @default(cuid())
+  memberId       String
+  member         Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  permissionName String   // 如 ai_analysis, asset_management
+  action         String   // grant | revoke
+  reason         String?
+  adminId        String?
+  admin          Admin?   @relation(fields: [adminId], references: [id])
+  createdAt      DateTime @default(now())
+
+  @@unique([memberId, permissionName])
+  @@index([memberId])
+}
+
+model ActivationCode {
+  id        String   @id @default(cuid())
+  code      String   @unique // 12 位如 YN4K-8X2M-9PQ1
+  planId    String
+  plan      Plan     @relation(fields: [planId], references: [id])
+  duration  Int // 有效期天数
+  status    String   @default("unused") // unused | used | revoked
+  usedBy    String?  // memberId
+  usedAt    DateTime?
+  note      String?  // 备注（批次说明）
+  expiresAt DateTime // 码的过期时间（未兑换则作废）
+  createdAt DateTime @default(now())
+
+  @@index([code])
+  @@index([status])
+}
+
+model Tag {
+  id        String        @id @default(cuid())
+  name      String        @unique
+  color     String        @default("#007AFF") // 标签颜色
+  createdAt DateTime      @default(now())
+  members   MemberTag[]
+
+  @@index([name])
+}
+
+model MemberTag {
+  id        String   @id @default(cuid())
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  tagId     String
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([memberId, tagId])
+  @@index([memberId])
+  @@index([tagId])
+}

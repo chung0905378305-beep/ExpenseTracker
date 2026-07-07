@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>记账本 · 后台会员管理系统预览</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  body { background: #f1f5f9; color: #0f172a; display: flex; min-height: 100vh; }
+  /* sidebar */
+  .side { width: 220px; background: #0f172a; color: #cbd5e1; padding: 20px 14px; flex-shrink: 0; }
+  .logo { color: #fff; font-size: 17px; font-weight: 700; padding: 6px 10px 20px; display: flex; align-items: center; gap: 8px; }
+  .logo .dot { width: 22px; height: 22px; border-radius: 6px; background: linear-gradient(135deg,#3b82f6,#1d4ed8); display:flex;align-items:center;justify-content:center;font-size:12px;}
+  .menu { list-style: none; }
+  .menu li { padding: 10px 12px; border-radius: 9px; font-size: 14px; margin-bottom: 4px; cursor: pointer; display:flex; gap:9px; align-items:center; }
+  .menu li.on { background: #1e293b; color: #fff; font-weight: 600; }
+  .menu li:hover { background: #1e293b; }
+  .me { margin-top: 30px; padding: 12px; background: #1e293b; border-radius: 10px; font-size: 12px; }
+  /* main */
+  .main { flex: 1; padding: 22px 26px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .topbar h1 { font-size: 20px; font-weight: 700; }
+  .topbar .right { font-size: 13px; color: #64748b; display:flex; gap:14px; align-items:center; }
+  .kpi { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; margin-bottom: 20px; }
+  .card { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .card .label { font-size: 12px; color: #64748b; margin-bottom: 8px; }
+  .card .value { font-size: 22px; font-weight: 700; }
+  .card .delta { font-size: 12px; margin-top: 6px; }
+  .up { color: #16a34a; } .down { color: #dc2626; }
+  .row2 { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .panel-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+  .legend { display:flex; gap:14px; font-size:12px; color:#64748b; margin-top:10px; }
+  .legend i { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: #64748b; font-weight: 600; padding: 9px 10px; border-bottom: 1px solid #e2e8f0; }
+  td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; background: #3b82f6; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+  .pill { font-size: 11px; padding: 2px 9px; border-radius: 20px; font-weight: 600; }
+  .p-active { background: #dcfce7; color: #16a34a; }
+  .p-trial { background: #fef9c3; color: #a16207; }
+  .p-block { background: #fee2e2; color: #dc2626; }
+  .tag-ios { background: #e0f2fe; color: #0369a1; font-size:11px;padding:2px 8px;border-radius:6px;}
+</style>
+</head>
+<body>
+  <aside class="side">
+    <div class="logo"><span class="dot">账</span> 记账本后台</div>
+    <ul class="menu">
+      <li class="on">📊 运营看板</li>
+      <li>👥 会员管理</li>
+      <li>🎫 套餐管理</li>
+      <li>🔁 订阅管理</li>
+      <li>💳 支付记录</li>
+      <li>⚙️ 系统设置</li>
+    </ul>
+    <div class="me">
+      <div style="color:#fff;font-weight:600;margin-bottom:4px">运营 · 李雷</div>
+      <div>li.lei@corp.com</div>
+      <div style="margin-top:6px;color:#94a3b8">角色：运营</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h1>运营看板</h1>
+      <div class="right"><span>数据截至 2026-07-07 11:00</span><span>🔔</span><span>退出</span></div>
+    </div>
+
+    <div class="kpi">
+      <div class="card"><div class="label">月度经常性收入 MRR</div><div class="value">¥186,420</div><div class="delta up">↑ 8.2% 环比</div></div>
+      <div class="card"><div class="label">活跃会员</div><div class="value">3,142</div><div class="delta up">↑ 126 本周</div></div>
+      <div class="card"><div class="label">今日新增</div><div class="value">87</div><div class="delta up">↑ 12 vs 昨日</div></div>
+      <div class="card"><div class="label">即将到期(7天)</div><div class="value">214</div><div class="delta down">需关注续费</div></div>
+      <div class="card"><div class="label">本月退款</div><div class="value">¥4,320</div><div class="delta down">↑ 3.1% 环比</div></div>
+    </div>
+
+    <div class="row2">
+      <div class="card">
+        <div class="panel-title">近 6 月新增会员 & 收入趋势</div>
+        <svg viewBox="0 0 520 220" width="100%" height="220">
+          <!-- grid -->
+          <g stroke="#eef2f7">
+            <line x1="40" y1="20" x2="510" y2="20"/><line x1="40" y1="65" x2="510" y2="65"/>
+            <line x1="40" y1="110" x2="510" y2="110"/><line x1="40" y1="155" x2="510" y2="155"/>
+            <line x1="40" y1="195" x2="510" y2="195"/>
+          </g>
+          <!-- members area -->
+          <path d="M40,150 L140,120 L240,135 L340,95 L440,80 L510,60 L510,195 L40,195 Z" fill="#3b82f6" opacity="0.12"/>
+          <polyline points="40,150 140,120 240,135 340,95 440,80 510,60" fill="none" stroke="#3b82f6" stroke-width="3"/>
+          <!-- revenue line -->
+          <polyline points="40,170 140,150 240,120 340,100 440,70 510,45" fill="none" stroke="#16a34a" stroke-width="3" stroke-dasharray="6 4"/>
+          <g fill="#0f172a" font-size="11">
+            <circle cx="40" cy="150" r="3"/><circle cx="140" cy="120" r="3"/><circle cx="240" cy="135" r="3"/><circle cx="340" cy="95" r="3"/><circle cx="440" cy="80" r="3"/><circle cx="510" cy="60" r="3"/>
+          </g>
+          <g fill="#94a3b8" font-size="11">
+            <text x="40" y="212">2月</text><text x="135" y="212">3月</text><text x="235" y="212">4月</text><text x="335" y="212">5月</text><text x="435" y="212">6月</text><text x="495" y="212">7月</text>
+          </g>
+        </svg>
+        <div class="legend"><span><i style="background:#3b82f6"></i>新增会员</span><span><i style="background:#16a34a"></i>收入(万元)</span></div>
+      </div>
+
+      <div class="card">
+        <div class="panel-title">套餐会员分布</div>
+        <svg viewBox="0 0 200 200" width="160" height="160" style="display:block;margin:6px auto 0">
+          <circle cx="100" cy="100" r="70" fill="none" stroke="#eef2f7" stroke-width="34"/>
+          <!-- pro 52% -->
+          <circle cx="100" cy="100" r="70" fill="none" stroke="#1d4ed8" stroke-width="34" stroke-dasharray="228 440" transform="rotate(-90 100 100)"/>
+          <!-- annual 28% -->
+          <circle cx="100" cy="100" r="70" fill="none" stroke="#3b82f6" stroke-width="34" stroke-dasharray="123 545" stroke-dashoffset="-228" transform="rotate(-90 100 100)"/>
+          <!-- trial 20% -->
+          <circle cx="100" cy="100" r="70" fill="none" stroke="#93c5fd" stroke-width="34" stroke-dasharray="88 580" stroke-dashoffset="-351" transform="rotate(-90 100 100)"/>
+          <text x="100" y="95" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">3,142</text>
+          <text x="100" y="115" text-anchor="middle" font-size="11" fill="#64748b">总会员</text>
+        </svg>
+        <div class="legend" style="justify-content:center">
+          <span><i style="background:#1d4ed8"></i>专业版 52%</span>
+          <span><i style="background:#3b82f6"></i>年付 28%</span>
+          <span><i style="background:#93c5fd"></i>试用 20%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="panel-title">近期会员</div>
+      <table>
+        <thead><tr><th>会员</th><th>邮箱</th><th>平台</th><th>注册时间</th><th>套餐</th><th>状态</th></tr></thead>
+        <tbody>
+          <tr><td><span class="avatar">W</span> 王芳</td><td>wangfang@qq.com</td><td><span class="tag-ios">iOS</span></td><td>2026-07-07</td><td>专业版(月)</td><td><span class="pill p-active">活跃</span></td></tr>
+          <tr><td><span class="avatar">Z</span> 张伟</td><td>zw@163.com</td><td><span class="tag-ios">iOS</span></td><td>2026-07-06</td><td>专业版(年)</td><td><span class="pill p-active">活跃</span></td></tr>
+          <tr><td><span class="avatar">L</span> 刘洋</td><td>liuyang@gmail.com</td><td><span class="tag-ios">iOS</span></td><td>2026-07-06</td><td>试用</td><td><span class="pill p-trial">试用中</span></td></tr>
+          <tr><td><span class="avatar">C</span> 陈静</td><td>cj@foxmail.com</td><td><span class="tag-ios">iOS</span></td><td>2026-07-05</td><td>专业版(月)</td><td><span class="pill p-block">已封禁</span></td></tr>
+          <tr><td><span class="avatar">H</span> 黄磊</td><td>hl@outlook.com</td><td><span class="tag-ios">iOS</span></td><td>2026-07-05</td><td>专业版(月)</td><td><span class="pill p-active">活跃</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</body>
+</html>

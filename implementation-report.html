@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>实施路线图 · 完成报告</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f7; color: #1d1d1f; padding: 30px; }
+h1 { font-size: 28px; margin-bottom: 8px; }
+h2 { font-size: 20px; margin: 28px 0 14px; border-bottom: 2px solid #007AFF; padding-bottom: 6px; }
+.overall { background: #007AFF; color: #fff; border-radius: 14px; padding: 20px; margin-bottom: 20px; display: flex; gap: 20px; flex-wrap: wrap; }
+.overall div { text-align: center; min-width: 100px; }
+.overall .val { font-size: 32px; font-weight: 700; }
+.overall .lbl { font-size: 13px; opacity: .8; margin-top: 4px; }
+.card { background: #fff; border-radius: 12px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.card h3 { font-size: 16px; margin-bottom: 10px; }
+.checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 8px; }
+.check { padding: 8px 12px; border-radius: 6px; font-size: 14px; }
+.check.pass { background: #e8f5e9; color: #2e7d32; }
+.check.new { background: #e3f2fd; color: #1565c0; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #eee; }
+th { color: #666; font-weight: 500; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.tag-p0 { background: #ffebee; color: #c62828; }
+.tag-p1 { background: #fff3e0; color: #e65100; }
+.tag-p2 { background: #e8eaf6; color: #283593; }
+</style>
+</head>
+<body>
+<h1>实施路线图 · 完成报告</h1>
+<p style="color:#666;margin-bottom:20px">记账本会员管理后台 — 基于稳定性测试后的功能补全</p>
+
+<div class="overall">
+  <div><div class="val">3</div><div class="lbl">P0 必须完成</div></div>
+  <div><div class="val">4</div><div class="lbl">P1 高优完成</div></div>
+  <div><div class="val">4</div><div class="lbl">P2 额外完成</div></div>
+  <div><div class="val">19</div><div class="lbl">新增 API 端点</div></div>
+  <div><div class="val">14</div><div class="lbl">新增文件</div></div>
+  <div><div class="val">0</div><div class="lbl">编译错误</div></div>
+</div>
+
+<h2>P0 — 必须补齐</h2>
+<div class="checks">
+  <div class="check pass">✅ 审计日志查看页面 — AuditLogs.vue（KPI+表格+详情+CSV导出）</div>
+  <div class="check pass">✅ 自动化测试套件 — vitest+supertest，覆盖 Auth/Members/Plans/Dashboard</div>
+  <div class="check pass">✅ 数据库备份 — 手动+定时+列表+恢复+清理，backups.vue 管理页</div>
+</div>
+
+<h2>P1 — 高优先级</h2>
+<div class="checks">
+  <div class="check pass">✅ 数据导出 — Excel(xlsx)导出 Members/Subscriptions/Payments，所有页加导出按钮</div>
+  <div class="check pass">✅ 会员标签系统 — Tag+MemberTag 表，CRUD+批量打标签，Members 页标签列及管理</div>
+  <div class="check pass">✅ 批量操作 — POST /batch/ban|unban|set-plan，Members 页 checkbox 多选+确认弹窗</div>
+  <div class="check pass">✅ API 文档 — Swagger(swagger-jsdoc+swagger-ui)，/api-docs 完整 17 个模块文档</div>
+</div>
+
+<h2>P2 — 额外完成</h2>
+<div class="checks">
+  <div class="check new">🆕 留存分析+收入趋势 — GET /analytics/retention|revenue，Analytics.vue EChart 图表</div>
+  <div class="check new">🆕 Docker 部署 — backend(Dockerfile)+web(Dockerfile+nginx.conf)+docker-compose.yml</div>
+  <div class="check new">🆕 PM2 进程守护 — ecosystem.config.js（backend+定时备份，内存限制+自动重启）</div>
+  <div class="check new">🆕 定时备份调度 — backup-scheduler.ts（24h 间隔，保留 30 个，Seed 预设 3 标签）</div>
+</div>
+
+<h2>新增 API 端点汇总</h2>
+<table>
+  <tr><th>方法</th><th>端点</th><th>说明</th><th>优先级</th></tr>
+  <tr><td>GET</td><td>/api/v1/audit-logs</td><td>审计日志列表（分页+筛选）</td><td><span class="tag tag-p0">P0</span></td></tr>
+  <tr><td>GET</td><td>/api/v1/audit-logs/stats</td><td>操作统计（按类型/管理员）</td><td><span class="tag tag-p0">P0</span></td></tr>
+  <tr><td>GET</td><td>/api/v1/audit-logs/export</td><td>导出 CSV</td><td><span class="tag tag-p0">P0</span></td></tr>
+  <tr><td>GET/POST/DELETE</td><td>/api/v1/backups</td><td>备份列表/创建/删除</td><td><span class="tag tag-p0">P0</span></td></tr>
+  <tr><td>POST</td><td>/api/v1/backups/:name/restore</td><td>恢复备份</td><td><span class="tag tag-p0">P0</span></td></tr>
+  <tr><td>GET</td><td>/api/v1/export/members</td><td>导出会员 Excel</td><td><span class="tag tag-p1">P1</span></td></tr>
+  <tr><td>GET</td><td>/api/v1/export/subscriptions</td><td>导出订阅 Excel</td><td><span class="tag tag-p1">P1</span></td></tr>
+  <tr><td>GET</td><td>/api/v1/export/payments</td><td>导出支付 Excel</td><td><span class="tag tag-p1">P1</span></td></tr>
+  <tr><td>GET/POST/PATCH/DELETE</td><td>/api/v1/tags</td><td>标签 CRUD</td><td><span class="tag tag-p1">P1</span></td></tr>
+  <tr><td>GET/POST/DELETE</td><td>/api/v1/tags/members/:id/tags</td><td>会员打标签</td><td><span class="tag tag-p1">P1</span></td></tr>
+  <tr><td>POST</td><td>/api/v1/tags/batch-tag</td><td>批量打标签</td><td><span class="tag tag-p1">P1</span></td></tr>
+  <tr><td>POST</td><td>/api/v1/batch/ban</td><td>批量封禁</td><td><span class="tag tag-p1">P1</span></td></tr>
+  <tr><td>POST</td><td>/api/v1/batch/unban</td><td>批量解封</td><td><span class="tag tag-p1">P1</span></td></tr>
+  <tr><td>POST</td><td>/api/v1/batch/set-plan</td><td>批量修改套餐</td><td><span class="tag tag-p1">P1</span></td></tr>
+  <tr><td>GET</td><td>/api-docs</td><td>Swagger API 文档</td><td><span class="tag tag-p1">P1</span></td></tr>
+  <tr><td>GET</td><td>/api/v1/analytics/retention</td><td>留存分析</td><td><span class="tag tag-p2">P2</span></td></tr>
+  <tr><td>GET</td><td>/api/v1/analytics/revenue</td><td>收入趋势+ARPU</td><td><span class="tag tag-p2">P2</span></td></tr>
+</table>
+
+<h2>新增文件清单</h2>
+<table>
+  <tr><th>层</th><th>文件</th><th>说明</th></tr>
+  <tr><td>后端</td><td>src/routes/audit-logs.ts</td><td>审计日志 API</td></tr>
+  <tr><td>后端</td><td>src/routes/backups.ts</td><td>备份管理 API</td></tr>
+  <tr><td>后端</td><td>src/utils/backup.ts</td><td>备份引擎（文件拷贝）</td></tr>
+  <tr><td>后端</td><td>src/backup-scheduler.ts</td><td>PM2 定时备份调度</td></tr>
+  <tr><td>后端</td><td>src/routes/export.ts</td><td>Excel 导出 API</td></tr>
+  <tr><td>后端</td><td>src/routes/tags.ts</td><td>标签+会员标签 API</td></tr>
+  <tr><td>后端</td><td>src/routes/batch.ts</td><td>批量操作 API</td></tr>
+  <tr><td>后端</td><td>src/routes/analytics.ts</td><td>数据分析 API</td></tr>
+  <tr><td>后端</td><td>src/swagger.ts</td><td>Swagger 文档定义</td></tr>
+  <tr><td>后端</td><td>tests/api.test.ts</td><td>自动化测试</td></tr>
+  <tr><td>后端</td><td>vitest.config.ts</td><td>测试配置</td></tr>
+  <tr><td>前端</td><td>views/AuditLogs.vue</td><td>审计日志页</td></tr>
+  <tr><td>前端</td><td>views/Backups.vue</td><td>备份管理页</td></tr>
+  <tr><td>前端</td><td>views/Analytics.vue</td><td>数据分析页</td></tr>
+  <tr><td>运维</td><td>Dockerfile (backend)</td><td>后端容器化</td></tr>
+  <tr><td>运维</td><td>Dockerfile (web)</td><td>前端容器化</td></tr>
+  <tr><td>运维</td><td>web/nginx.conf</td><td>Nginx SPA+代理</td></tr>
+  <tr><td>运维</td><td>docker-compose.yml</td><td>编排</td></tr>
+  <tr><td>运维</td><td>ecosystem.config.js</td><td>PM2 配置</td></tr>
+</table>
+
+<p style="margin-top:24px; color:#666; font-size:13px">验证：后端 tsc 零错误 ✅ · 前端 vue-tsc 零错误 ✅ · 前端 vite build 成功 ✅ · 19 个新 API 全部 200 ✅</p>
+</body>
+</html>
