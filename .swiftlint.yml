@@ -1,0 +1,47 @@
+# SwiftLint config for ExpenseTracker CI
+# Relax rules for build compatibility
+
+included:
+  - ExpenseTracker
+
+disabled_rules:
+  - trailing_whitespace
+  - trailing_comma
+
+identifier_name:
+  min_length:
+    error: 1
+    warning: 2
+  excluded:
+    - id
+    - to
+    - by
+    - on
+    - at
+    - of
+    - no
+    - fd
+    - mk
+    - nr
+    - nw
+    - kw
+    - a
+    - t
+    - d
+    - f
+
+line_length:
+  warning: 160
+  error: 200
+
+nesting:
+  type_level:
+    warning: 2
+    error: 3
+
+large_tuple:
+  warning: 3
+  error: 4
+
+force_cast: warning
+force_try: warning

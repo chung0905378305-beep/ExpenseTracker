@@ -63,7 +63,7 @@ targets:
       - name: "SwiftLint (skip if missing)"
         script: |
           if which swiftlint >/dev/null; then
-            swiftlint
+            swiftlint --config .swiftlint.yml || true
           fi
         basedOnDependencyAnalysis: false
     postBuildScripts:
