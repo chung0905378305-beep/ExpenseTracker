@@ -27,12 +27,11 @@ targets:
       - path: ExpenseTracker/Views
       # Utils
       - path: ExpenseTracker/Utils
-      # Resources (exclude .storyboard - not compatible with Xcode 16.2 on Codemagic)
+      # Resources
       - path: ExpenseTracker/Resources
         buildPhase: resources
         excludes:
           - "Info.plist"
-          - "LaunchScreen.storyboard"
     settings:
       base:
         INFOPLIST_FILE: ExpenseTracker/Resources/Info.plist
