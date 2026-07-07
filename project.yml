@@ -30,6 +30,8 @@ targets:
       # Resources
       - path: ExpenseTracker/Resources
         buildPhase: resources
+        excludes:
+          - "Info.plist"
     settings:
       base:
         INFOPLIST_FILE: ExpenseTracker/Resources/Info.plist
